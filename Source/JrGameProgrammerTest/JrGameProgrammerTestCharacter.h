@@ -39,6 +39,10 @@ class AJrGameProgrammerTestCharacter : public ACharacter
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USceneComponent* VR_MuzzleLocation;
 
+	/** Location of the grabbed object */
+	UPROPERTY(EditDefaultsOnly, Category = Mesh)
+	USceneComponent* GrabbedObjectLocation;
+
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
@@ -93,9 +97,16 @@ protected:
 		float DashDistance = 6000;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dashing")
 		float DashSpeed = 600;
-	/** Fires a projectile. */
+	/** Gravity Gun. */
 	void OnFire();
-
+	void EndFire();
+	void SetGrabbedObject(UPrimitiveComponent* ObjectToGrab);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity Gun")
+		float PickUpRadius = 4000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity Gun")
+		float FiringForce = 3000.f;
+	UPROPERTY()
+	UPrimitiveComponent* GrabbedObject;
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 

@@ -80,7 +80,8 @@ AJrGameProgrammerTestCharacter::AJrGameProgrammerTestCharacter()
 	VR_MuzzleLocation->SetupAttachment(VR_Gun);
 	VR_MuzzleLocation->SetRelativeLocation(FVector(0.000004, 53.999992, 10.000000));
 	VR_MuzzleLocation->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));		// Counteract the rotation of the VR gun model.
-
+	GrabbedObjectLocation = CreateDefaultSubobject<USceneComponent>(TEXT("GrabbedObjectLocation"));
+	GrabbedObjectLocation->SetupAttachment(FP_Gun);
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
 }
@@ -120,6 +121,7 @@ void AJrGameProgrammerTestCharacter::SetupPlayerInputComponent(class UInputCompo
 
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AJrGameProgrammerTestCharacter::OnFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &AJrGameProgrammerTestCharacter::EndFire);
 	// Bind dash event
 	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &AJrGameProgrammerTestCharacter::Dashing);
 
@@ -145,7 +147,8 @@ void AJrGameProgrammerTestCharacter::Dashing()
 {
 	if (GetCharacterMovement()->Velocity != FVector::ZeroVector)
 	{	
-			FVector forwardDirection = this->GetCharacterMovement()->GetLastInputVector();
+			FVector forwardDirection = this->
+				GetCharacterMovement()->GetLastInputVector();
 			GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
 			LaunchCharacter(forwardDirection * DashDistance, false, false);
 
@@ -154,51 +157,60 @@ void AJrGameProgrammerTestCharacter::Dashing()
 
 void AJrGameProgrammerTestCharacter::OnFire()
 {
-	// try and fire a projectile
-	if (ProjectileClass != nullptr)
+	const FCollisionQueryParams QueryParams("GravityGunTrace", false, this);
+	const FVector StartTrace = FirstPersonCameraComponent->GetComponentLocation();
+	const FVector EndTrace = (FirstPersonCameraComponent->GetForwardVector() * PickUpRadius) + StartTrace;
+	FHitResult Hit;
+	if (GetWorld()->LineTraceSingleByChannel(Hit, StartTrace, EndTrace, ECC_Visibility, QueryParams))
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
+		if (UPrimitiveComponent* Prim = Hit.GetComponent())
 		{
-			if (bUsingMotionControllers)
+			if (Prim->IsSimulatingPhysics())
 			{
-				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
-				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
-				World->SpawnActor<AJrGameProgrammerTestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
+				SetGrabbedObject(Prim);
 			}
-			else
-			{
-				const FRotator SpawnRotation = GetControlRotation();
-				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
-
-				//Set Spawn Collision Handling Override
-				FActorSpawnParameters ActorSpawnParams;
-				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-				// spawn the projectile at the muzzle
-				World->SpawnActor<AJrGameProgrammerTestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			}
-		}
-	}
-
-	// try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
-
-	// try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
 }
+
+void AJrGameProgrammerTestCharacter::EndFire()
+{
+	if (GrabbedObject)
+	{
+		const FVector FireVelocity = FirstPersonCameraComponent->GetForwardVector() * FiringForce;
+		GrabbedObject->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+		GrabbedObject->SetSimulatePhysics(true);
+		GrabbedObject->AddImpulse(FireVelocity, NAME_None, true);
+		SetGrabbedObject(nullptr);
+		if (FireSound != nullptr)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		}
+
+		// try and play a firing animation if specified
+		if (FireAnimation != nullptr)
+		{
+			// Get the animation object for the arms mesh
+			UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
+			if (AnimInstance != nullptr)
+			{
+				AnimInstance->Montage_Play(FireAnimation, 1.f);
+			}
+		}
+
+	}
+}
+void AJrGameProgrammerTestCharacter::SetGrabbedObject(UPrimitiveComponent* ObjectToGrab)
+{
+	GrabbedObject = ObjectToGrab;
+	if (GrabbedObject)
+	{
+		GrabbedObject->SetSimulatePhysics(false);
+		GrabbedObject->AttachToComponent(GrabbedObjectLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+}
+
+
 
 void AJrGameProgrammerTestCharacter::OnResetVR()
 {
