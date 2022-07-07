@@ -87,7 +87,12 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 protected:
-	
+	/** Dash the Character */
+	void Dashing();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dashing")
+		float DashDistance = 6000;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dashing")
+		float DashSpeed = 600;
 	/** Fires a projectile. */
 	void OnFire();
 

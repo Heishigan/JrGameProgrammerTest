@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
+#include "Gameframework/CharacterMovementComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
@@ -119,6 +120,8 @@ void AJrGameProgrammerTestCharacter::SetupPlayerInputComponent(class UInputCompo
 
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AJrGameProgrammerTestCharacter::OnFire);
+	// Bind dash event
+	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &AJrGameProgrammerTestCharacter::Dashing);
 
 	// Enable touchscreen input
 	EnableTouchscreenMovement(PlayerInputComponent);
@@ -136,6 +139,17 @@ void AJrGameProgrammerTestCharacter::SetupPlayerInputComponent(class UInputCompo
 	PlayerInputComponent->BindAxis("TurnRate", this, &AJrGameProgrammerTestCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AJrGameProgrammerTestCharacter::LookUpAtRate);
+}
+
+void AJrGameProgrammerTestCharacter::Dashing()
+{
+	if (GetCharacterMovement()->Velocity != FVector::ZeroVector)
+	{	
+			FVector forwardDirection = this->GetCharacterMovement()->GetLastInputVector();
+			GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
+			LaunchCharacter(forwardDirection * DashDistance, false, false);
+
+	}
 }
 
 void AJrGameProgrammerTestCharacter::OnFire()
