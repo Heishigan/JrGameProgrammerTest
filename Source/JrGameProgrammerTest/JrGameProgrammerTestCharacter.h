@@ -91,7 +91,7 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 protected:
-	void Tick(float DeltaTime) override;
+
 	/** Dash the Character */
 	void Dashing();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dashing")
@@ -107,8 +107,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity Gun")
 		float FiringForce = 3000.f;
 	UPROPERTY()
-	UPrimitiveComponent* GrabbedObject;
+		UPrimitiveComponent* GrabbedObject;
+	void Tick(float DeltaTime) override;
 	/** JetPack. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Jet Pack")
 	float MaxRiseSpeed = 420;
 	void StartJetpack();
 	void StopJetpack();

@@ -146,12 +146,14 @@ void AJrGameProgrammerTestCharacter::SetupPlayerInputComponent(class UInputCompo
 void AJrGameProgrammerTestCharacter::Dashing()
 {
 	if (GetCharacterMovement()->Velocity != FVector::ZeroVector)
-	{	
+	{
+		if (!bisJetPackFlying && !GetMovementComponent()->IsFalling())
+		{
 			FVector forwardDirection = this->
 				GetCharacterMovement()->GetLastInputVector();
 			GetCharacterMovement()->MaxWalkSpeed = DashSpeed;
 			LaunchCharacter(forwardDirection * DashDistance, false, false);
-
+		}
 	}
 }
 
