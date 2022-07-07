@@ -115,9 +115,9 @@ void AJrGameProgrammerTestCharacter::SetupPlayerInputComponent(class UInputCompo
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
 
-	// Bind jump events
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	// Bind JetPack events
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AJrGameProgrammerTestCharacter::StartJetpack);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &AJrGameProgrammerTestCharacter::StopJetpack);
 
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AJrGameProgrammerTestCharacter::OnFire);
@@ -198,6 +198,24 @@ void AJrGameProgrammerTestCharacter::EndFire()
 			}
 		}
 
+	}
+}
+void AJrGameProgrammerTestCharacter::StartJetpack()
+{
+	bisJetPackFlying = true;
+
+}
+
+void AJrGameProgrammerTestCharacter::StopJetpack()
+{
+	bisJetPackFlying = false;
+}
+void AJrGameProgrammerTestCharacter::Tick(float DeltaTime)
+{
+	if (bisJetPackFlying)
+	{
+		GetMovementComponent()->Velocity.Z = MaxRiseSpeed;
+		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 	}
 }
 void AJrGameProgrammerTestCharacter::SetGrabbedObject(UPrimitiveComponent* ObjectToGrab)

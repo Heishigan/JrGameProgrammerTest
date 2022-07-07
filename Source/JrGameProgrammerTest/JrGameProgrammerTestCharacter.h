@@ -91,6 +91,7 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 protected:
+	void Tick(float DeltaTime) override;
 	/** Dash the Character */
 	void Dashing();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dashing")
@@ -107,6 +108,11 @@ protected:
 		float FiringForce = 3000.f;
 	UPROPERTY()
 	UPrimitiveComponent* GrabbedObject;
+	/** JetPack. */
+	float MaxRiseSpeed = 420;
+	void StartJetpack();
+	void StopJetpack();
+	bool bisJetPackFlying;
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 
